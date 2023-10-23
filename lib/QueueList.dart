@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'main.dart';
 import 'second_route.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,8 +11,8 @@ String SERVER_URL = dotenv.get(
   fallback: "http://localhost:88",
 );
 // ignore: non_constant_identifier_names
-Future<List<ShopQueue>> fetchQueues() async {
-  final response = await http.get(Uri.parse('$SERVER_URL/queue'));
+Future<List<ShopQueue>> fetchQueues(String url) async {
+  final response = await http.get(Uri.parse('$url/queue'));
   print(response.body);
   if (response.statusCode == 200) {
     // Do something with the response body
@@ -53,39 +54,54 @@ class ShopQueue {
 }
 
 // Create a FutureBuilder widget for the queues
-FutureBuilder<List<ShopQueue>> buildFutureBuilderQueues() {
-  return FutureBuilder<List<ShopQueue>>(
-    future: fetchQueues(),
-    builder: (context, snapshot) {
-      if (snapshot.hasData) {
-        List<ShopQueue>? data = snapshot.data;
-        return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 40,
-              crossAxisSpacing: 0,
-            ),
-            itemCount: data!.length,
-            itemBuilder: (BuildContext context, int index) {
-              return QueueItem(data: data[index]);
-            });
-      } else if (snapshot.hasError) {
-        return Text("${snapshot.error}");
-      }
-      return const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            strokeWidth: 8.0,
-            color: Color.fromARGB(255, 255, 189, 89),
-          ),
-          SizedBox(height: 20),
-          Text('Loading Queues...'),
-        ],
+Consumer<ServerUrlNotifier> buildFutureBuilderQueues() {
+  return Consumer<ServerUrlNotifier>(
+    builder: (BuildContext context, ServerUrlNotifier value, Widget? child) {
+      return FutureBuilder<List<ShopQueue>>(
+        future: fetchQueues(value.serverUrl),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<ShopQueue>? data = snapshot.data;
+            return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 40,
+                  crossAxisSpacing: 0,
+                ),
+                itemCount: data!.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return QueueItem(data: data[index]);
+                });
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          return const LoadingQueueWidget();
+        },
       );
     },
   );
+}
+
+class LoadingQueueWidget extends StatelessWidget {
+  const LoadingQueueWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        CircularProgressIndicator(
+          strokeWidth: 8.0,
+          color: Color.fromARGB(255, 255, 189, 89),
+        ),
+        SizedBox(height: 20),
+        Text('Loading Queues...'),
+      ],
+    );
+  }
 }
 
 class QueueItem extends StatelessWidget {
@@ -99,12 +115,10 @@ class QueueItem extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         print("napindot ${data.name}");
+        Provider.of<QueueNotifier>(context, listen: false).setQueue(data);
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => SecondRoute(
-                    queue: data,
-                  )),
+          MaterialPageRoute(builder: (context) => const SecondRoute()),
         );
       },
       child: ServiceCard(data.name, data.iconName),

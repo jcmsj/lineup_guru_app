@@ -18,8 +18,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => QueueNotifier(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (ctx) => QueueNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => ServerUrlNotifier(),
+        ),
+      ],
       child: MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
@@ -53,16 +60,16 @@ class MyApp extends StatelessWidget {
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
 
-  const CustomAppBar({required this.height});
+  const CustomAppBar({super.key, required this.height});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: height,
       child: AppBar(
         elevation: 0,
         centerTitle: true,
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Icon(Icons.qr_code),
@@ -85,51 +92,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        PageTitleWidget(title: "Services"),
+        const PageTitleWidget(title: "Services"),
         Expanded(
           child: buildFutureBuilderQueues(),
-          // child: GridView.count(
-          //   crossAxisCount: 2,
-          //   mainAxisSpacing: 40,
-          //   crossAxisSpacing: 0,
-          //   children: [
-          //     GestureDetector(
-          //       onTap: () {
-          //         print("napindot");
-          //         Navigator.push(
-          //           context,
-          //           MaterialPageRoute(
-          //               builder: (context) => const SecondRoute()),
-          //         );
-          //       },
-          //       child: ServiceCard('SAC', Icons.help_center_rounded),
-          //     ),
-          //     GestureDetector(
-          //       onTap: () {},
-          //       child: ServiceCard('Payments', Icons.payments_outlined),
-          //     ),
-          //     GestureDetector(
-          //       onTap: () {},
-          //       child: ServiceCard('SHS MT', Icons.accessibility),
-          //     ),
-          //     GestureDetector(
-          //       onTap: () {},
-          //       child:
-          //           ServiceCard('Guidance Center', Icons.credit_score_rounded),
-          //     ),
-          //   ],
-          // ),
         ),
       ],
     );
   }
 }
 
-// Create a PageTitleStatefulWidget with a string title field
 class PageTitleWidget extends StatefulWidget {
   final String title;
   const PageTitleWidget({Key? key, required this.title}) : super(key: key);
@@ -148,17 +125,17 @@ class PageTitleState extends State<PageTitleWidget> {
         children: [
           Text(
             widget.title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 28.0,
               fontWeight: FontWeight.bold,
               color: Color.fromARGB(255, 84, 84, 84),
             ),
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 8.0),
           Container(
             height: 1.5,
             width: 500,
-            color: Color.fromARGB(255, 255, 189, 89),
+            color: const Color.fromARGB(255, 255, 189, 89),
           ),
         ],
       ),
@@ -169,18 +146,17 @@ class PageTitleState extends State<PageTitleWidget> {
 class ServiceCard extends StatelessWidget {
   final String serviceName;
   final String iconName;
-  ServiceCard(this.serviceName, this.iconName);
+  const ServiceCard(this.serviceName, this.iconName, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-      color: Color.fromARGB(255, 64, 55, 52),
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(40.0),
       ),
-      child: Container(
+      child: SizedBox(
         height: 150.0, // Adjust the height here
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -194,10 +170,10 @@ class ServiceCard extends StatelessWidget {
                 fontSize: 48,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text(
               serviceName,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 17.0,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -211,6 +187,8 @@ class ServiceCard extends StatelessWidget {
 }
 
 class BottomNavBar extends StatefulWidget {
+  const BottomNavBar({super.key});
+
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
 }
@@ -235,16 +213,16 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(height: 125),
+      appBar: const CustomAppBar(height: 125),
       body: PageView(
         controller: pageController,
         onPageChanged: (v) {
           tabIndex = v;
         },
-        children: [
-          Container(child: HomePage()),
-          Container(child: QRViewExample()),
-          Container(child: SettingsPage()),
+        children: const [
+          HomePage(),
+          QRViewExample(),
+          SettingsPage(),
         ],
       ),
       bottomNavigationBar: CircleNavBar(
@@ -258,8 +236,8 @@ class _BottomNavBarState extends State<BottomNavBar>
           Icon(Icons.qr_code_sharp, color: Colors.black, size: 35),
           Icon(Icons.settings_outlined, color: Colors.black, size: 35),
         ],
-        color: Color.fromARGB(255, 255, 235, 150),
-        circleColor: Color.fromARGB(255, 64, 55, 52),
+        color: const Color.fromARGB(255, 255, 235, 150),
+        circleColor: const Color.fromARGB(255, 64, 55, 52),
         circleShadowColor: Colors.black,
         elevation: 10,
         height: 90,
@@ -278,54 +256,147 @@ class _BottomNavBarState extends State<BottomNavBar>
   }
 }
 
+// Create a StatefulWidget with a url variable
+
+class ServerUrlNotifier extends ChangeNotifier {
+  String _serverUrl = "http://localhost:88";
+
+  String get serverUrl => _serverUrl;
+
+  set serverUrl(String url) {
+    _serverUrl = url;
+    notifyListeners();
+  }
+}
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(
+            SizedBox(
               height: 60,
               width: 250,
               child: Card(
-                color: Color.fromARGB(255, 64, 55, 52),
                 child: Center(
-                  child: Text("Manual",
-                      style: TextStyle(color: Colors.white, fontSize: 25)),
+                  child: ServerUrlWidget(),
                 ),
               ),
             ),
             SizedBox(height: 50.0),
-            Container(
+            SizedBox(
               height: 60,
               width: 250,
               child: Card(
-                color: Color.fromARGB(255, 64, 55, 52),
                 child: Center(
-                  child: Text("App Theme",
-                      style: TextStyle(color: Colors.white, fontSize: 25)),
+                  child: Text(
+                    "Manual",
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
               ),
             ),
             SizedBox(height: 50.0),
-            Container(
+            SizedBox(
               height: 60,
               width: 250,
               child: Card(
-                color: Color.fromARGB(255, 64, 55, 52),
                 child: Center(
-                  child: Text("About Us",
-                      style: TextStyle(color: Colors.white, fontSize: 25)),
+                  child: Text(
+                    "App Theme",
+                    style: TextStyle(fontSize: 25),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 50.0),
+            SizedBox(
+              height: 60,
+              width: 250,
+              child: Card(
+                child: Center(
+                  child: Text(
+                    "About Us",
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class ServerUrlWidget extends StatefulWidget {
+  const ServerUrlWidget({super.key});
+
+  @override
+  State<ServerUrlWidget> createState() => _ServerUrlState();
+}
+
+// Define a corresponding State class.
+// This class holds data related to the Form.
+class _ServerUrlState extends State<ServerUrlWidget> {
+  // Create a text controller. Later, use it to retrieve the
+  // current value of the TextField.
+  final textFieldCtl = TextEditingController();
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is removed from the widget tree
+    textFieldCtl.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Start listening to changes.
+    textFieldCtl.addListener(syncNotifier);
+  }
+
+  void syncNotifier() {
+    Provider.of<ServerUrlNotifier>(
+      context,
+      listen: false, // No need to listen
+    ).serverUrl = textFieldCtl.text;
+  }
+
+  @override
+  void didChangeDependencies() {
+    textFieldCtl.text = Provider.of<ServerUrlNotifier>(
+      context,
+      listen: true, // Be sure to listen
+    )._serverUrl;
+    super.didChangeDependencies();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ServerUrlNotifier>(
+      builder: ((context, model, child) {
+        return TextField(
+          controller: textFieldCtl,
+          style: const TextStyle(fontSize: 20),
+          textAlignVertical: TextAlignVertical.center,
+          textAlign: TextAlign.center,
+          decoration: const InputDecoration(
+              floatingLabelAlignment: FloatingLabelAlignment.center,
+              hintStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 25,
+              ),
+              hintText: 'Server Url'),
+        );
+      }),
     );
   }
 }
