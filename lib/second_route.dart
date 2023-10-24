@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:lineup_guru_app/QueueList.dart';
-import 'package:lineup_guru_app/main.dart';
 import 'package:http/http.dart' as http;
+import 'queue_list.dart';
+import 'page_title_widget.dart';
+import 'server_url_widget.dart';
 import 'package:provider/provider.dart';
 
 // Create a ChangeNotifier for a nullable ShopQueue variable with an extra field my number
@@ -22,23 +22,33 @@ class QueueNotifier extends ChangeNotifier {
     _myNumber = myNumber;
     notifyListeners();
   }
-
-  void pollQueue(String url) async {
-    // Get ServerURL from ServerUrlNotifier
-    final response = await http.get(Uri.parse('$url/queue/${_queue?.name}'));
-    if (response.statusCode == 200) {
-      // body -> json -> Update queueNotifier
-      setQueue(ShopQueue.fromJson(jsonDecode(response.body)));
-    } else {
-      print(
-        'Failed to fetch queue. Reason: ${response.body}',
-      );
-    }
-  }
 }
 
-// Create a widget that returns a FloatingActionButton that changes between a show qr code button
-// or a join queue button
+Future<ShopQueue> pollQueue(String url, String name) async {
+  // Get ServerURL from ServerUrlNotifier
+  final response = await http.get(Uri.parse('$url/queue/$name'));
+  if (response.statusCode == 200) {
+    // body -> json -> Update queueNotifier
+    return ShopQueue.fromJson(jsonDecode(response.body));
+  }
+
+  throw Exception(
+    'Failed to fetch queue. Reason: ${response.body}',
+  );
+}
+
+Future<int> joinQueue(ShopQueue q, String url) async {
+  final response = await http.post(
+    Uri.parse('$url/join/${q.id}'),
+  );
+  if (response.statusCode == 200) {
+    // Do something with the response body
+    Map<String, dynamic> result = jsonDecode(response.body);
+    return result['number'];
+  } else {
+    throw Exception('Failed to join queue');
+  }
+}
 
 class JoinOrQRFab extends StatefulWidget {
   const JoinOrQRFab({super.key});
@@ -66,11 +76,15 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
           disabledElevation: 0,
           onPressed: () async {
             queueNotifier.setMyNumber(await joinQueue(
-                queueNotifier.queue!,
-                serverUrlNotifier.serverUrl == ""
-                    ? "http://localhost:88"
-                    : serverUrlNotifier.serverUrl));
-            queueNotifier.pollQueue(serverUrlNotifier.serverUrl);
+              queueNotifier.queue!,
+              serverUrlNotifier.serverUrl == ""
+                  ? "http://lineup-gu.ru.larkspur.website"
+                  : serverUrlNotifier.serverUrl,
+            ));
+            queueNotifier.setQueue(await pollQueue(
+              serverUrlNotifier.serverUrl,
+              queueNotifier.queue!.name,
+            ));
           },
           label: const Text("Join Queue"),
           icon: const Icon(Icons.add));
@@ -93,10 +107,13 @@ class _SecondRouteState extends State<SecondRoute> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) async {
       print("polling queue");
-      Provider.of<QueueNotifier>(context, listen: false).pollQueue(
-          Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl);
+      Provider.of<QueueNotifier>(context, listen: false).setQueue(
+        await pollQueue(
+            Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
+            Provider.of<QueueNotifier>(context, listen: false).queue!.name),
+      );
     });
   }
 
@@ -175,18 +192,5 @@ class _SecondRouteState extends State<SecondRoute> {
         ),
       );
     });
-  }
-}
-
-Future<int> joinQueue(ShopQueue q, String url) async {
-  final response = await http.post(
-    Uri.parse('$url/join/${q.id}'),
-  );
-  if (response.statusCode == 200) {
-    // Do something with the response body
-    Map<String, dynamic> result = jsonDecode(response.body);
-    return result['number'];
-  } else {
-    throw Exception('Failed to join queue');
   }
 }

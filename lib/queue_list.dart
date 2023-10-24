@@ -2,14 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'server_url_widget.dart';
 import 'main.dart';
 import 'second_route.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-String SERVER_URL = dotenv.get(
-  "SERVER_URL",
-  fallback: "http://localhost:88",
-);
 // ignore: non_constant_identifier_names
 Future<List<ShopQueue>> fetchQueues(String url) async {
   final response = await http.get(Uri.parse('$url/queue'));

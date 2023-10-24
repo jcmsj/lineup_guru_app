@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'package:lineup_guru_app/QueueList.dart';
-import 'package:lineup_guru_app/second_route.dart';
+import 'page_title_widget.dart';
+import 'queue_list.dart';
+import 'server_url_widget.dart';
+import 'second_route.dart';
 import 'package:provider/provider.dart';
-import 'dart:developer';
-import 'dart:io';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'q_r_view_example.dart';
+import 'settings_page.dart';
 
 void main() async {
-  await dotenv.load(isOptional: true);
   runApp(const MyApp());
 }
 
@@ -28,31 +27,27 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 255, 189, 89),
-            // primary: Color.fromARGB(255, 255, 189, 89),
-            // ···
-            // Set the background color of cards to be Color.fromARGB(255, 64, 55, 52)
-            surface: const Color.fromARGB(255, 64, 55, 52),
-            onSurface: Colors.white,
-            background: const Color.fromARGB(255, 255, 247, 207),
-            brightness: Brightness.light,
-          ),
-          appBarTheme: const AppBarTheme(
-              backgroundColor: Color.fromARGB(255, 255, 235, 150),
-              foregroundColor: Colors.black),
-          primaryColor: const Color.fromARGB(255, 255, 189, 89),
-          // for navbar rgb(255, 222, 89)
-          // for cards rgb(64, 55, 52)
-          useMaterial3: true,
-        ),
-        //  home: Scaffold(
-        //    // appBar: CustomAppBar(height: 125),
-        //    bottomNavigationBar: BottomNavBar(),
-        //  ),
+        theme: customTheme(),
         home: BottomNavBar(),
       ),
+    );
+  }
+
+  ThemeData customTheme() {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color.fromARGB(255, 255, 189, 89),
+        surface: const Color.fromARGB(255, 64, 55, 52),
+        onSurface: Colors.white,
+        background: const Color.fromARGB(255, 255, 247, 207),
+        brightness: Brightness.light,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color.fromARGB(255, 255, 235, 150),
+        foregroundColor: Colors.black,
+      ),
+      primaryColor: const Color.fromARGB(255, 255, 189, 89),
+      useMaterial3: true,
     );
   }
 }
@@ -80,7 +75,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ),
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
       ),
@@ -103,42 +98,6 @@ class HomePage extends StatelessWidget {
           child: buildFutureBuilderQueues(),
         ),
       ],
-    );
-  }
-}
-
-class PageTitleWidget extends StatefulWidget {
-  final String title;
-  const PageTitleWidget({Key? key, required this.title}) : super(key: key);
-
-  @override
-  PageTitleState createState() => PageTitleState();
-}
-
-// Create a State class for the PageTitleStatefulWidget
-class PageTitleState extends State<PageTitleWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        children: [
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: 28.0,
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 84, 84, 84),
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Container(
-            height: 1.5,
-            width: 500,
-            color: const Color.fromARGB(255, 255, 189, 89),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -253,239 +212,5 @@ class _BottomNavBarState extends State<BottomNavBar>
         ),
       ),
     );
-  }
-}
-
-// Create a StatefulWidget with a url variable
-
-class ServerUrlNotifier extends ChangeNotifier {
-  String _serverUrl = "http://localhost:88";
-
-  String get serverUrl => _serverUrl;
-
-  set serverUrl(String url) {
-    _serverUrl = url;
-    notifyListeners();
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SizedBox(
-              height: 60,
-              width: 250,
-              child: Card(
-                child: Center(
-                  child: ServerUrlWidget(),
-                ),
-              ),
-            ),
-            SizedBox(height: 50.0),
-            SizedBox(
-              height: 60,
-              width: 250,
-              child: Card(
-                child: Center(
-                  child: Text(
-                    "Manual",
-                    style: TextStyle(fontSize: 25),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 50.0),
-            SizedBox(
-              height: 60,
-              width: 250,
-              child: Card(
-                child: Center(
-                  child: Text(
-                    "App Theme",
-                    style: TextStyle(fontSize: 25),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 50.0),
-            SizedBox(
-              height: 60,
-              width: 250,
-              child: Card(
-                child: Center(
-                  child: Text(
-                    "About Us",
-                    style: TextStyle(fontSize: 25),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ServerUrlWidget extends StatefulWidget {
-  const ServerUrlWidget({super.key});
-
-  @override
-  State<ServerUrlWidget> createState() => _ServerUrlState();
-}
-
-// Define a corresponding State class.
-// This class holds data related to the Form.
-class _ServerUrlState extends State<ServerUrlWidget> {
-  // Create a text controller. Later, use it to retrieve the
-  // current value of the TextField.
-  final textFieldCtl = TextEditingController();
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is removed from the widget tree
-    textFieldCtl.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Start listening to changes.
-    textFieldCtl.addListener(syncNotifier);
-  }
-
-  void syncNotifier() {
-    Provider.of<ServerUrlNotifier>(
-      context,
-      listen: false, // No need to listen
-    ).serverUrl = textFieldCtl.text;
-  }
-
-  @override
-  void didChangeDependencies() {
-    textFieldCtl.text = Provider.of<ServerUrlNotifier>(
-      context,
-      listen: true, // Be sure to listen
-    )._serverUrl;
-    super.didChangeDependencies();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ServerUrlNotifier>(
-      builder: ((context, model, child) {
-        return TextField(
-          controller: textFieldCtl,
-          style: const TextStyle(fontSize: 20),
-          textAlignVertical: TextAlignVertical.center,
-          textAlign: TextAlign.center,
-          decoration: const InputDecoration(
-              floatingLabelAlignment: FloatingLabelAlignment.center,
-              hintStyle: TextStyle(
-                color: Colors.white,
-                fontSize: 25,
-              ),
-              hintText: 'Server Url'),
-        );
-      }),
-    );
-  }
-}
-
-class QRViewExample extends StatefulWidget {
-  const QRViewExample({Key? key}) : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _QRViewExampleState();
-}
-
-class _QRViewExampleState extends State<QRViewExample> {
-  Barcode? result;
-  QRViewController? controller;
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-
-  // In order to get hot reload to work we need to pause the camera if the platform
-  // is android, or resume the camera if the platform is iOS.
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller!.pauseCamera();
-    }
-    controller!.resumeCamera();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Text(result?.code?.toString() ?? 'Scan a code',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, color: Colors.black)),
-          Expanded(flex: 4, child: _buildQrView(context)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQrView(BuildContext context) {
-    // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
-    var scanArea = (MediaQuery.of(context).size.width < 400 ||
-            MediaQuery.of(context).size.height < 400)
-        ? 150.0
-        : 350.0;
-    // To ensure the Scanner view is properly sizes after rotation
-    // we need to listen for Flutter SizeChanged notification and update controller
-    return QRView(
-      key: qrKey,
-      onQRViewCreated: _onQRViewCreated,
-      overlay: QrScannerOverlayShape(
-          borderColor: Colors.orange,
-          borderRadius: 20,
-          borderLength: 40,
-          borderWidth: 10,
-          // overlayColor: Color.fromARGB(255, 255, 247, 207),
-          cutOutSize: scanArea),
-      onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
-    );
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-      controller.scannedDataStream.listen((scanData) {
-        if (mounted) {
-          setState(() {
-            result = scanData;
-            controller.pauseCamera();
-          });
-        }
-      });
-    });
-  }
-
-  void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
-    log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
-    if (!p) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('no Permission')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 }
